@@ -104,6 +104,12 @@ SCIJUDGE-AI
 
 ---
 
+## Contributing
+
+Contributions, ideas, and feedback are always welcome. Feel free to open an issue or submit a pull request if you'd like to improve the project.
+
+---
+
 ## Author
 
 Yassin Ali
@@ -116,3 +122,9 @@ https://linktr.ee/yassin.ali
 
 LinkedIn:
 https://www.linkedin.com/in/yassinali30/
+
+---
+
+## License
+
+This project is licensed under the MIT License.
