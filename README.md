@@ -111,5 +111,8 @@ Yassin Ali
 GitHub:
 https://github.com/YassinAliElDeeb
 
+Linktree:
+https://linktr.ee/yassin.ali
+
 LinkedIn:
 https://www.linkedin.com/in/yassinali30/
