@@ -92,7 +92,17 @@ SCIJUDGE-AI
 ```
 
 ---
+## Screenshots
 
+### Home Page
+
+<p align="center">
+  <img src="assets/home.png" width="900" alt="SCIJUDGE AI Home">
+</p>
+
+> Replace `home.png` with your actual screenshot filename.
+
+---
 ## Roadmap
 
 - User authentication
