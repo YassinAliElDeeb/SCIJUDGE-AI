@@ -1213,7 +1213,14 @@ export default function Home() {
   >
     Linktree
   </a>
-
+<a
+  href="https://github.com/YassinAliElDeeb"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="px-5 py-2 rounded-2xl bg-zinc-500/10 border border-zinc-500/20 text-zinc-300 hover:bg-zinc-500/20 hover:scale-105 transition-all duration-300"
+>
+  GitHub
+</a>
   <a
     href="https://www.linkedin.com/in/yassinali30/"
     target="_blank"
