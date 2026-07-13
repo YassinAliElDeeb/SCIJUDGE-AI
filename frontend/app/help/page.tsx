@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const GITHUB_URL = "https://github.com/YassinAliElDeeb/SCIJUDGE-AI";
 const LINKEDIN_URL = "https://www.linkedin.com/in/yassinali30/";
-const EMAIL = "yassin.ali.official@gmail.com"; // update with the real contact email
+const EMAIL = "yassin.ali.official@gmail.com"; 
 
 const quickStartSteps = [
   {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,20 +61,23 @@ export default function Navbar() {
         <div className="flex items-center justify-between px-5 sm:px-8 py-3.5">
 
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          <Link href="/" className="flex items-center gap-4 shrink-0">
 
             <motion.div
-              whileHover={{ rotate: -6, scale: 1.06 }}
+              whileHover={{ rotate: -5, scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="relative w-[42px] h-[42px] shrink-0"
+              className="relative w-[46px] h-[46px] shrink-0"
             >
 
-              {/* Soft cyan glow behind the mark */}
-              <div className="absolute inset-0 rounded-xl bg-cyan-400/40 blur-lg" />
+              {/* Subtle cyan glow behind the logo */}
+              <div className="absolute inset-0 rounded-xl bg-cyan-400/25 blur-xl scale-110" />
 
-              <div className="relative w-[42px] h-[42px] rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center text-sm font-black text-black">
-                SJ
-              </div>
+             <Image
+  src="/logo.png"
+  alt="Logo"
+  width={60}
+  height={60}
+/>
 
             </motion.div>
 
@@ -83,8 +87,8 @@ export default function Navbar() {
                 SCIJUDGE AI
               </span>
 
-              <span className="text-xs text-zinc-400">
-                AI Research Evaluation Platform
+              <span className="text-xs text-zinc-400 font-medium">
+                AI-powered Research Evaluation
               </span>
 
             </div>
