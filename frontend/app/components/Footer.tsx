@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 // Update these if the repo or a hosted demo URL ever change
@@ -92,27 +93,35 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
 
-            <Link href="/" className="inline-flex items-center gap-3 mb-4">
+            <Link href="/" className="inline-flex items-center gap-4 mb-4">
 
               <motion.div
-                whileHover={{ rotate: -6, scale: 1.06 }}
+                whileHover={{ rotate: -4, scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="relative w-10 h-10 shrink-0"
+                className="relative w-16 h-16 shrink-0"
               >
-                <div className="absolute inset-0 rounded-xl bg-cyan-400/40 blur-lg" />
-                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center text-sm font-black text-black">
-                  SJ
-                </div>
+                <div className="absolute inset-0 rounded-2xl bg-cyan-400/20 blur-2xl scale-110" />
+                <Image
+                  src="/logo.png"
+                  alt="SCIJUDGE AI Logo"
+                  width={64}
+                  height={64}
+                  priority
+                  quality={100}
+                  className="relative z-10 rounded-2xl object-contain"
+                />
               </motion.div>
 
-              <span className="text-lg font-black tracking-tight bg-gradient-to-r from-cyan-300 via-white to-purple-400 bg-clip-text text-transparent">
+              <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-white to-purple-400 bg-clip-text text-transparent">
                 SCIJUDGE AI
               </span>
 
             </Link>
 
-            <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">
-              AI-powered scientific research evaluation platform.
+            <p className="text-sm text-zinc-400 leading-relaxed max-w-[260px]">
+              AI-powered platform for evaluating scientific research papers,
+              built to support students, researchers, and science fair
+              judges.
             </p>
 
           </div>
