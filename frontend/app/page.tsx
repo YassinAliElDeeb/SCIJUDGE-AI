@@ -1,7 +1,7 @@
 "use client";
 
 import jsPDF from "jspdf";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useEffect } from "react";
 import {
@@ -16,6 +16,70 @@ import {
   Tooltip
 } from "recharts";
 
+
+type ScoreStyle = {
+  text: string;
+  bg: string;
+  border: string;
+  gradient: string;
+  label: string;
+};
+
+function getScoreStyle(value: number): ScoreStyle {
+  if (value >= 8) {
+    return {
+      text: "text-green-400",
+      bg: "bg-green-500/10",
+      border: "border-green-500/20",
+      gradient: "from-green-400 to-emerald-500",
+      label: "Excellent"
+    };
+  }
+
+  if (value >= 5) {
+    return {
+      text: "text-yellow-400",
+      bg: "bg-yellow-500/10",
+      border: "border-yellow-500/20",
+      gradient: "from-yellow-400 to-orange-500",
+      label: "Good"
+    };
+  }
+
+  return {
+    text: "text-red-400",
+    bg: "bg-red-500/10",
+    border: "border-red-500/20",
+    gradient: "from-red-400 to-rose-500",
+    label: "Needs Improvement"
+  };
+}
+
+function getRelativeDate(dateString: string) {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return "Unknown date";
+
+  const now = new Date();
+
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+  const diffDays = Math.round(
+    (startOfDay(now) - startOfDay(date)) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays > 1 && diffDays < 7) return `${diffDays} days ago`;
+
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+
 export default function Home() {
 
   const [loading, setLoading] = useState(false);
@@ -27,6 +91,13 @@ export default function Home() {
   const [judgePersona, setJudgePersona] = useState("ISEF Judge");
 
   const [loadingStep, setLoadingStep] = useState(0);
+
+  // History dashboard controls
+  const [historySearch, setHistorySearch] = useState("");
+  const [historySort, setHistorySort] = useState<
+    "newest" | "oldest" | "highest" | "lowest"
+  >("newest");
+
   useEffect(() => {
 
     const savedResult = localStorage.getItem("scijudge_report");
@@ -59,18 +130,8 @@ export default function Home() {
     }
   
   }, [result]);
-  useEffect(() => {
 
-    if (result) {
-  
-      localStorage.setItem(
-        "scijudge_report",
-        JSON.stringify(result)
-      );
-  
-    }
-  
-  }, [result]);const loadingMessages = [
+  const loadingMessages = [
 
     "Initializing AI Judges...",
 
@@ -376,6 +437,74 @@ export default function Home() {
       score: result?.analysis?.clarity_score || 0
     }
   ];
+
+  // ---------- History dashboard derived data ----------
+
+  const historyOverallScores: number[] = history
+    .map((r) => r?.analysis?.overall_score)
+    .filter((v) => typeof v === "number");
+
+  const totalReports = history.length;
+
+  const avgScore =
+    historyOverallScores.length > 0
+      ? (
+          historyOverallScores.reduce((a, b) => a + b, 0) /
+          historyOverallScores.length
+        ).toFixed(1)
+      : "N/A";
+
+  const highestScore =
+    historyOverallScores.length > 0
+      ? Math.max(...historyOverallScores)
+      : "N/A";
+
+  const lowestScore =
+    historyOverallScores.length > 0
+      ? Math.min(...historyOverallScores)
+      : "N/A";
+
+  const filteredHistory = history.filter((report) =>
+    (report.filename || "")
+      .toLowerCase()
+      .includes(historySearch.toLowerCase())
+  );
+
+  const sortedHistory = [...filteredHistory].sort((a, b) => {
+
+    const scoreA = a?.analysis?.overall_score ?? 0;
+    const scoreB = b?.analysis?.overall_score ?? 0;
+
+    switch (historySort) {
+      case "oldest":
+        return (
+          new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime()
+        );
+      case "highest":
+        return scoreB - scoreA;
+      case "lowest":
+        return scoreA - scoreB;
+      default:
+        return (
+          new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+        );
+    }
+
+  });
+
+  const deleteReport = (savedAt: string) => {
+
+    const filtered = history.filter((r) => r.savedAt !== savedAt);
+
+    setHistory(filtered);
+
+    localStorage.setItem(
+      "scijudge_history",
+      JSON.stringify(filtered)
+    );
+
+  };
+
   return (
     <main
       dir={isArabic ? "rtl" : "ltr"}
@@ -727,96 +856,218 @@ export default function Home() {
 
   </div>
 
-  <div className="grid md:grid-cols-2 gap-6">
+  {/* Stats Overview */}
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
 
-    {history.map((report, index) => (
+    {[
+      { label: "Total Reports", value: totalReports, color: "text-white" },
+      { label: "Average Score", value: avgScore, color: "text-cyan-300" },
+      { label: "Highest Score", value: highestScore, color: "text-green-400" },
+      { label: "Lowest Score", value: lowestScore, color: "text-red-400" }
+    ].map((stat, index) => (
 
       <motion.div
-        key={index}
-        whileHover={{
-          y: -8,
-          scale: 1.01
-        }}
-        className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+        key={stat.label}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.08 }}
+        whileHover={{ y: -6, scale: 1.02 }}
+        className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6 backdrop-blur-xl"
       >
 
-        <div className="flex items-start justify-between gap-4">
+        <p className="text-zinc-400 text-xs md:text-sm mb-2 uppercase tracking-wide">
+          {stat.label}
+        </p>
 
-          <div>
-
-            <h3 className="text-xl font-bold text-white mb-2">
-              {report.filename}
-            </h3>
-
-            <p className="text-zinc-400 text-sm mb-4">
-              {new Date(report.savedAt).toLocaleString()}
-            </p>
-
-            <div className="flex gap-3 flex-wrap">
-
-<div className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 text-sm">
-  Overall: {report?.analysis?.overall_score ?? "N/A"}
-</div>
-
-<div className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 text-sm">
-  Innovation: {report?.analysis?.innovation_score ?? "N/A"}
-</div>
-
-</div>
-
-          </div>
-
-          <div className="flex flex-col gap-3">
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-
-                setResult(report);
-
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth"
-                });
-
-              }}
-              className="px-4 py-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300"
-            >
-              Open
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-
-                const filtered = history.filter(
-                  (_: any, i: number) => i !== index
-                );
-
-                setHistory(filtered);
-
-                localStorage.setItem(
-                  "scijudge_history",
-                  JSON.stringify(filtered)
-                );
-
-              }}
-              className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300"
-            >
-              Delete
-            </motion.button>
-
-          </div>
-
-        </div>
+        <h3 className={`text-2xl md:text-4xl font-black ${stat.color}`}>
+          {stat.value}
+        </h3>
 
       </motion.div>
 
     ))}
 
   </div>
+
+  {/* Search + Sort Controls */}
+  <div className="flex flex-col md:flex-row gap-4 mb-8">
+
+    <div className="relative flex-1">
+
+      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500">
+        🔍
+      </span>
+
+      <input
+        type="text"
+        value={historySearch}
+        onChange={(e) => setHistorySearch(e.target.value)}
+        placeholder="Search reports by filename..."
+        className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-5 py-3 text-white placeholder:text-zinc-500 outline-none focus:border-cyan-500/40 transition-colors"
+      />
+
+    </div>
+
+    <select
+      value={historySort}
+      onChange={(e) => setHistorySort(e.target.value as typeof historySort)}
+      className="bg-black/40 border border-white/10 rounded-2xl px-5 py-3 text-white outline-none focus:border-cyan-500/40 transition-colors md:w-56"
+    >
+      <option value="newest">Newest First</option>
+      <option value="oldest">Oldest First</option>
+      <option value="highest">Highest Score</option>
+      <option value="lowest">Lowest Score</option>
+    </select>
+
+  </div>
+
+  {/* Empty search state */}
+  {sortedHistory.length === 0 ? (
+
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl py-16 px-6 text-center"
+    >
+
+      <div className="w-20 h-20 mx-auto rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-3xl mb-5">
+        🔎
+      </div>
+
+      <h3 className="text-xl font-bold text-white mb-2">
+        No reports match "{historySearch}"
+      </h3>
+
+      <p className="text-zinc-500 max-w-sm mx-auto mb-6">
+        Try a different filename, or clear the search to see all your reports.
+      </p>
+
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => setHistorySearch("")}
+        className="px-5 py-2.5 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300 font-medium"
+      >
+        Clear Search
+      </motion.button>
+
+    </motion.div>
+
+  ) : (
+
+    <div className="grid md:grid-cols-2 gap-6">
+
+      <AnimatePresence>
+
+        {sortedHistory.map((report) => {
+
+          const overall = report?.analysis?.overall_score;
+          const innovation = report?.analysis?.innovation_score;
+
+          const overallStyle =
+            typeof overall === "number" ? getScoreStyle(overall) : null;
+
+          return (
+
+            <motion.div
+              layout
+              key={report.savedAt}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              whileHover={{
+                y: -8,
+                scale: 1.015,
+                boxShadow: "0px 0px 40px rgba(34,211,238,0.15)"
+              }}
+              transition={{ duration: 0.3 }}
+              className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6 backdrop-blur-xl"
+            >
+
+              <div className="flex items-start justify-between gap-4">
+
+                <div className="flex items-start gap-4 min-w-0">
+
+                  <div className="shrink-0 w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-xl">
+                    📄
+                  </div>
+
+                  <div className="min-w-0">
+
+                    <h3 className="text-lg md:text-xl font-bold text-white mb-1 truncate">
+                      {report.filename}
+                    </h3>
+
+                    <p className="text-zinc-500 text-sm mb-4">
+                      {getRelativeDate(report.savedAt)}
+                    </p>
+
+                    <div className="flex gap-2 flex-wrap">
+
+                      <div
+                        className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium border ${
+                          overallStyle
+                            ? `${overallStyle.bg} ${overallStyle.text} ${overallStyle.border}`
+                            : "bg-white/5 text-zinc-400 border-white/10"
+                        }`}
+                      >
+                        Overall: {overall ?? "N/A"}
+                      </div>
+
+                      <div className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 text-xs md:text-sm font-medium">
+                        Innovation: {innovation ?? "N/A"}
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div className="flex gap-3 mt-5">
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+
+                    setResult(report);
+
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth"
+                    });
+
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-medium"
+                >
+                  Open
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => deleteReport(report.savedAt)}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 font-medium"
+                >
+                  Delete
+                </motion.button>
+
+              </div>
+
+            </motion.div>
+
+          );
+
+        })}
+
+      </AnimatePresence>
+
+    </div>
+
+  )}
 
 </div>
 
@@ -953,12 +1204,7 @@ export default function Home() {
 
                 const percentage = item.value * 10;
 
-                const color =
-                  item.value >= 8
-                    ? "from-green-400 to-emerald-500"
-                    : item.value >= 5
-                    ? "from-yellow-400 to-orange-500"
-                    : "from-red-400 to-rose-500";
+                const style = getScoreStyle(item.value);
 
                 return (
 
@@ -988,7 +1234,7 @@ export default function Home() {
                           duration: 1.2,
                           delay: index * 0.2
                         }}
-                        className={`h-full rounded-full bg-gradient-to-r ${color}`}
+                        className={`h-full rounded-full bg-gradient-to-r ${style.gradient}`}
                       />
 
                     </div>
@@ -996,21 +1242,11 @@ export default function Home() {
                     <p className="text-sm text-zinc-500 mt-3">
                       {percentage}%
                     </p>
-                    <p className={`text-sm mt-2 font-medium ${
-  item.value >= 8
-    ? "text-green-400"
-    : item.value >= 5
-    ? "text-yellow-400"
-    : "text-red-400"
-}`}>
-  {
-    item.value >= 8
-      ? "Excellent"
-      : item.value >= 5
-      ? "Good"
-      : "Needs Improvement"
-  }
-</p>
+
+                    <p className={`text-sm mt-2 font-medium ${style.text}`}>
+                      {style.label}
+                    </p>
+
                   </motion.div>
 
                 );
