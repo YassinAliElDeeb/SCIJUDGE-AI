@@ -58,7 +58,20 @@ This project is being developed as part of **Hack Club Horizons 2026**.
 5. Users can review or download the evaluation report.
 
 ---
+## AI Usage
 
+SCIJUDGE AI uses Large Language Models (LLMs) to assist in evaluating scientific research papers.
+
+AI is used to:
+
+- Analyze uploaded research papers.
+- Generate structured feedback.
+- Identify strengths and weaknesses.
+- Produce structured category-based evaluation scores.
+
+SCIJUDGE AI is designed to **assist** students, researchers, and judges—not replace them. Final evaluation decisions should always be made by qualified human reviewers.
+
+---
 ## Tech Stack
 
 ### Frontend
