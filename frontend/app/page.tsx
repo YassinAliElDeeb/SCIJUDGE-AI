@@ -16,8 +16,6 @@ import {
   Tooltip
 } from "recharts";
 
-// ---------- Shared helpers (refactored out of duplicated inline logic) ----------
-
 type ScoreStyle = {
   text: string;
   bg: string;
