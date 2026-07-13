@@ -5,6 +5,7 @@ import fitz
 import os
 import json
 import re
+import hashlib
 import requests
 
 # Load ENV
@@ -57,6 +58,18 @@ async def upload_pdf(
 
         # Limit text size
         text = text[:12000]
+
+        # --- DEBUG: prove this request has its own distinct content ---
+        text_hash = hashlib.md5(text.encode("utf-8", errors="ignore")).hexdigest()
+
+        print(
+            f"[UPLOAD] filename={file.filename} "
+            f"persona={judge_persona} "
+            f"text_len={len(text)} "
+            f"text_hash={text_hash} "
+            f"preview={text[:120]!r}"
+        )
+        # ----------------------------------------------------------------
 
         # PERSONA SYSTEM
         persona_prompt = ""
@@ -139,6 +152,15 @@ Be supportive but realistic.
 Use the FULL scoring scale from 1 to 10.
 """
 
+        # Guard against an empty/unreadable PDF producing a generic,
+        # near-identical prompt across different uploads.
+        if not text.strip():
+
+            return {
+                "error": "Could not extract any text from this PDF. "
+                         "It may be scanned/image-only or corrupted."
+            }
+
         # MAIN PROMPT
         prompt = f"""
 {persona_prompt}
@@ -191,18 +213,20 @@ Research Paper:
             },
             json={
                 "model": "openrouter/auto",
+                "temperature": 0.7,
                 "messages": [
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ]
-            }
+            },
+            timeout=60
         )
 
         result = response.json()
 
-        print(result)
+        print(f"[UPLOAD] filename={file.filename} openrouter_status={response.status_code}")
 
         # Handle API errors
         if "choices" not in result:
@@ -218,6 +242,12 @@ Research Paper:
 
         # Convert AI response to JSON
         parsed = json.loads(cleaned)
+
+        print(
+            f"[UPLOAD] filename={file.filename} "
+            f"overall_score={parsed.get('overall_score')} "
+            f"innovation_score={parsed.get('innovation_score')}"
+        )
 
         return {
             "filename": file.filename,

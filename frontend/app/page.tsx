@@ -16,6 +16,7 @@ import {
   Tooltip
 } from "recharts";
 
+// ---------- Shared helpers (refactored out of duplicated inline logic) ----------
 
 type ScoreStyle = {
   text: string;
@@ -232,9 +233,9 @@ export default function Home() {
       ]
     : [];
 
-  const downloadPDF = () => {
+  const downloadPDF = (reportToDownload: any) => {
 
-    if (!result?.analysis) return;
+    if (!reportToDownload?.analysis) return;
 
     const pdf = new jsPDF("p", "mm", "a4");
 
@@ -286,11 +287,11 @@ export default function Home() {
     pdf.setFontSize(16);
 
     const scores = [
-      `Overall Score: ${result.analysis.overall_score}`,
-      `Innovation: ${result.analysis.innovation_score}`,
-      `Methodology: ${result.analysis.methodology_score}`,
-      `Impact: ${result.analysis.impact_score}`,
-      `Clarity: ${result.analysis.clarity_score}`
+      `Overall Score: ${reportToDownload.analysis.overall_score}`,
+      `Innovation: ${reportToDownload.analysis.innovation_score}`,
+      `Methodology: ${reportToDownload.analysis.methodology_score}`,
+      `Impact: ${reportToDownload.analysis.impact_score}`,
+      `Clarity: ${reportToDownload.analysis.clarity_score}`
     ];
 
     scores.forEach((score) => {
@@ -313,17 +314,17 @@ export default function Home() {
 
     addTextBlock(
       "Strengths",
-      result.analysis.strengths
+      reportToDownload.analysis.strengths
     );
 
     addTextBlock(
       "Weaknesses",
-      result.analysis.weaknesses
+      reportToDownload.analysis.weaknesses
     );
 
     addTextBlock(
       "Judge Questions",
-      result.analysis.judge_questions
+      reportToDownload.analysis.judge_questions
     );
 
     pdf.setFontSize(18);
@@ -343,13 +344,21 @@ export default function Home() {
     pdf.setFontSize(12);
 
     const verdictLines = pdf.splitTextToSize(
-      result.analysis.final_verdict,
+      reportToDownload.analysis.final_verdict,
       170
     );
 
     pdf.text(verdictLines, 20, y);
 
-    pdf.save("SciJudge_Report.pdf");
+    const baseName = (reportToDownload.filename || "SciJudge_Report")
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]+/g, "_");
+
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-");
+
+    pdf.save(`${baseName}_${timestamp}.pdf`);
   };
 
   const handleUpload = async (file: File) => {
@@ -1091,7 +1100,7 @@ export default function Home() {
                   boxShadow: "0px 0px 40px rgba(34,211,238,0.5)"
                 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={downloadPDF}
+                onClick={() => downloadPDF(result)}
                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold shadow-lg transition-all duration-300"
               >
                 Download AI Report

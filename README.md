@@ -5,6 +5,13 @@ SCIJUDGE AI is a web application that assists in evaluating scientific research 
 The project is currently under active development, and new features are continuously being added and improved.
 
 ---
+## Live Demo
+
+🚀 Try SCIJUDGE AI online:
+
+https://scijudge-ai.vercel.app
+
+---
 
 ## Features
 
