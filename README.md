@@ -1,5 +1,18 @@
 # SCIJUDGE AI
+<p align="center">
+  <img src="assets/logo.png" alt="SCIJUDGE AI Logo" width="220">
+</p>
 
+<h1 align="center">SCIJUDGE AI</h1>
+
+<p align="center">
+AI-powered scientific research evaluation platform for students, researchers, and science fair judges.
+</p>
+
+<p align="center">
+  <a href="https://scijudge-ai.vercel.app">🌐 Live Demo</a> •
+  <a href="https://github.com/YassinAliElDeeb/SCIJUDGE-AI">💻 GitHub</a>
+</p>
 SCIJUDGE AI is a web application that assists in evaluating scientific research papers. It provides structured feedback and scoring based on common judging criteria, helping students, researchers, and science fair judges review papers more efficiently.
 
 The project is currently under active development, and new features are continuously being added and improved.
